@@ -1,3 +1,8 @@
+import membersJson from './ai-members.json' with { type: 'json' };
+import populateMembers from '../JS-utils/membersPopulator.js';
+populateMembers(membersJson);
+
+
 const hamburger = document.querySelector(".hamburger");
 const navContainer = document.querySelector(".nav-container");
 
