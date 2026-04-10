@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const menuItems = [
+const allMenuItems = [
   { id: 'overview', icon: 'fa-tachometer-alt', label: 'Dashboard', path: '/dashboard/overview' },
   { id: 'committees', icon: 'fa-layer-group', label: 'Committees', path: '/dashboard/committees' },
   { id: 'events', icon: 'fa-calendar-alt', label: 'Events', path: '/dashboard/events' },
@@ -12,12 +12,15 @@ const menuItems = [
   { id: 'mailing-list', icon: 'fa-envelope-open-text', label: 'Mailing List', path: '/dashboard/mailing-list' },
   { id: 'gallery', icon: 'fa-images', label: 'Gallery', path: '/dashboard/gallery' },
   { id: 'analytics', icon: 'fa-chart-line', label: 'Analytics', path: '/dashboard/analytics' },
-  { id: 'settings', icon: 'fa-cog', label: 'Settings', path: '/dashboard/settings' }
+  { id: 'settings', icon: 'fa-cog', label: 'Settings', path: '/dashboard/settings' },
+  { id: 'users', icon: 'fa-user-shield', label: 'Users', path: '/dashboard/users', superadminOnly: true },
 ]
 
 function Sidebar({ isOpen, setIsOpen }) {
   const navigate = useNavigate()
   const location = useLocation()
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+  const menuItems = allMenuItems.filter(item => !item.superadminOnly || currentUser.role === 'superadmin')
 
   const handleNavigation = (path) => {
     navigate(path)

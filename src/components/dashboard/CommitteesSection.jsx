@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
 import { compressImage } from '../../utils/imageCompressor'
 
@@ -6,12 +7,12 @@ import { compressImage } from '../../utils/imageCompressor'
 const EMPTY_COMMITTEE = {
   name: '', slug: '', category: 'technical', icon: '', image: '',
   tagline: '', shortDesc: '', order: 0, isActive: true,
-  goals: [], roles: [], activities: [],
+  goals: [], activities: [],
 }
 
 const EMPTY_MEMBER = {
-  name: '', roleType: 'featured', role: '', bio: '',
-  photo: '', email: '', linkedin: '', github: '', stars: '', order: 0, isActive: true,
+  name: '', roleType: 'head', role: '', bio: '',
+  photo: '', email: '', linkedin: '', github: '', order: 0, isActive: true,
 }
 
 const slugify = (str) =>
@@ -75,7 +76,6 @@ function CommitteesSection() {
         order: committee.order ?? 0,
         isActive: committee.isActive ?? true,
         goals: committee.goals ? committee.goals.map(g => ({ ...g })) : [],
-        roles: committee.roles ? [...committee.roles] : [],
         activities: committee.activities ? committee.activities.map(a => ({ ...a })) : [],
       })
     } else {
@@ -111,12 +111,6 @@ function CommitteesSection() {
   const removeGoal = (i) => setCForm(prev => ({ ...prev, goals: prev.goals.filter((_, idx) => idx !== i) }))
   const updateGoal = (i, field, val) =>
     setCForm(prev => ({ ...prev, goals: prev.goals.map((g, idx) => idx === i ? { ...g, [field]: val } : g) }))
-
-  // Roles
-  const addRole = () => setCForm(prev => ({ ...prev, roles: [...prev.roles, ''] }))
-  const removeRole = (i) => setCForm(prev => ({ ...prev, roles: prev.roles.filter((_, idx) => idx !== i) }))
-  const updateRole = (i, val) =>
-    setCForm(prev => ({ ...prev, roles: prev.roles.map((r, idx) => idx === i ? val : r) }))
 
   // Activities
   const addActivity = () => setCForm(prev => ({ ...prev, activities: [...prev.activities, { title: '', desc: '' }] }))
@@ -229,7 +223,6 @@ function CommitteesSection() {
         ...mForm,
         committee: activeCommittee._id,
         order: Number(mForm.order),
-        stars: mForm.stars !== '' ? Number(mForm.stars) : undefined,
       }
       if (editingMember) {
         const { data } = await api.put(`/admin/members/${editingMember}`, payload)
@@ -258,7 +251,7 @@ function CommitteesSection() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const roleTypeLabel = { head: 'Head', vice_head: 'Vice Head', featured: 'Featured' }
+  const roleTypeLabel = { head: 'Head', vice_head: 'Vice Head' }
   const categoryColor = { technical: '#00629b', 'non-technical': '#78be20' }
 
   return (
@@ -418,23 +411,6 @@ function CommitteesSection() {
                 ))}
               </div>
 
-              {/* Roles */}
-              <div style={{ marginTop: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <strong><i className="fas fa-tasks"></i> Member Roles / Expectations</strong>
-                  <button type="button" className="action-btn mini" onClick={addRole}><i className="fas fa-plus"></i> Add</button>
-                </div>
-                {cForm.roles.map((r, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '15px', marginBottom: '15px', alignItems: 'flex-start', background: 'var(--card-bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                    <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Role Requirement / Expectation</label>
-                      <input type="text" value={r} onChange={e => updateRole(i, e.target.value)} placeholder="e.g. Attend all meetings regularly" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-color)' }} />
-                    </div>
-                    <button type="button" className="action-btn mini danger" style={{ marginTop: '26px' }} onClick={() => removeRole(i)}><i className="fas fa-trash"></i></button>
-                  </div>
-                ))}
-              </div>
-
               {/* Activities */}
               <div style={{ marginTop: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -488,10 +464,10 @@ function CommitteesSection() {
             {membersLoading ? (
               <p style={{ color: 'var(--text-light)', padding: '20px' }}>Loading members...</p>
             ) : members.length === 0 ? (
-              <p style={{ color: 'var(--text-light)', padding: '20px' }}>No members yet. Add the head, vice head, and featured members.</p>
+              <p style={{ color: 'var(--text-light)', padding: '20px' }}>No members yet. Add the head and vice head(s).</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {['head', 'vice_head', 'featured'].map(type => {
+                {['head', 'vice_head'].map(type => {
                   const group = members.filter(m => m.roleType === type)
                   if (group.length === 0) return null
                   return (
@@ -510,11 +486,6 @@ function CommitteesSection() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600 }}>{m.name}</div>
                             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{m.role}</div>
-                            {m.stars && (
-                              <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)' }}>
-                                {'★'.repeat(m.stars)}{'☆'.repeat(5 - m.stars)}
-                              </div>
-                            )}
                           </div>
                           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                             <button type="button" className="action-btn mini" onClick={() => openMemberModal(m)} style={{ background: 'var(--input-bg)', color: 'var(--primary-color)' }}>
@@ -550,7 +521,6 @@ function CommitteesSection() {
                         <select name="roleType" value={mForm.roleType} onChange={handleMChange}>
                           <option value="head">Head</option>
                           <option value="vice_head">Vice Head</option>
-                          <option value="featured">Featured</option>
                         </select>
                       </div>
                     </div>
@@ -560,12 +530,6 @@ function CommitteesSection() {
                         <label><i className="fas fa-briefcase"></i> Role / Title</label>
                         <input type="text" name="role" value={mForm.role} onChange={handleMChange} placeholder="e.g. AI Head, Cybersecurity Researcher" />
                       </div>
-                      {mForm.roleType === 'featured' && (
-                        <div className="form-group" style={{ flex: 1 }}>
-                          <label><i className="fas fa-star"></i> Stars (1–5)</label>
-                          <input type="number" name="stars" value={mForm.stars} onChange={handleMChange} min="1" max="5" placeholder="4" />
-                        </div>
-                      )}
                     </div>
 
                     <div className="form-group">
