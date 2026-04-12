@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
 import { compressImage } from '../../utils/imageCompressor'
+import { toast } from '../../utils/toast'
 
 const TIER_LABELS = { 1: 'Tier I — Leadership', 2: 'Tier II — Design', 3: 'Tier III — Engineering' }
 
@@ -77,9 +78,10 @@ function WebsiteTeamSection() {
         const { data } = await api.post('/admin/website-team', payload)
         setMembers(prev => [...prev, data.data])
       }
+      toast.success(editingId ? 'Member updated.' : 'Member added.')
       closeModal()
     } catch (err) {
-      setError(err.response?.data?.message || 'Save failed.')
+      toast.error(err.response?.data?.message || 'Save failed.')
     } finally {
       setSaving(false)
     }
@@ -90,8 +92,9 @@ function WebsiteTeamSection() {
     try {
       await api.delete(`/admin/website-team/${id}`)
       setMembers(prev => prev.filter(m => m._id !== id))
+      toast.success('Team member deleted.')
     } catch {
-      setError('Delete failed.')
+      toast.error('Delete failed.')
     }
   }
 
@@ -101,7 +104,6 @@ function WebsiteTeamSection() {
   return (
     <section className="content-section active">
       <h1>Website Team</h1>
-      {error && <p style={{ color: 'var(--danger-color)', marginBottom: '12px' }}>{error}</p>}
       <div className="section-header">
         <h2>Team Members</h2>
         <div className="section-actions">

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
 import { compressImage } from '../../utils/imageCompressor'
+import { toast } from '../../utils/toast'
 
 function MembersSection() {
   const [members, setMembers] = useState([])
@@ -72,9 +73,10 @@ function MembersSection() {
         const { data } = await api.post('/admin/excom', form)
         setMembers(prev => [...prev, data.data])
       }
+      toast.success(editingId ? 'Member updated.' : 'Member added.')
       closeModal()
     } catch (err) {
-      setError(err.response?.data?.message || 'Save failed.')
+      toast.error(err.response?.data?.message || 'Save failed.')
     } finally {
       setSaving(false)
     }
@@ -85,15 +87,15 @@ function MembersSection() {
     try {
       await api.delete(`/admin/excom/${id}`)
       setMembers(prev => prev.filter(m => m._id !== id))
+      toast.success('Member deleted.')
     } catch {
-      setError('Delete failed.')
+      toast.error('Delete failed.')
     }
   }
 
   return (
     <section className="content-section active">
       <h1>Members Management</h1>
-      {error && <p style={{ color: 'var(--danger-color)', marginBottom: '12px' }}>{error}</p>}
       <div className="section-header">
         <h2>ExCom Members</h2>
         <div className="section-actions">

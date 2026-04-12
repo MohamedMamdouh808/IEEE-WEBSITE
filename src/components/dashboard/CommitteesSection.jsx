@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
 import { compressImage } from '../../utils/imageCompressor'
+import { toast } from '../../utils/toast'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -131,9 +132,10 @@ function CommitteesSection() {
         const { data } = await api.post('/admin/committees', payload)
         setCommittees(prev => [...prev, data.data])
       }
+      toast.success(editingCommittee ? 'Committee updated.' : 'Committee created.')
       closeCommitteeModal()
     } catch (err) {
-      setError(err.response?.data?.message || 'Save failed.')
+      toast.error(err.response?.data?.message || 'Save failed.')
     } finally {
       setSaving(false)
     }
@@ -143,8 +145,9 @@ function CommitteesSection() {
     try {
       const { data } = await api.put(`/admin/committees/${committee._id}`, { isActive: !committee.isActive })
       setCommittees(prev => prev.map(c => c._id === committee._id ? data.data : c))
+      toast.success('Status updated.')
     } catch {
-      setError('Failed to toggle status.')
+      toast.error('Failed to toggle status.')
     }
   }
 
@@ -153,8 +156,9 @@ function CommitteesSection() {
     try {
       await api.delete(`/admin/committees/${id}`)
       setCommittees(prev => prev.filter(c => c._id !== id))
+      toast.success('Committee deleted.')
     } catch {
-      setError('Delete failed.')
+      toast.error('Delete failed.')
     }
   }
 
@@ -231,9 +235,10 @@ function CommitteesSection() {
         const { data } = await api.post('/admin/members', payload)
         setMembers(prev => [...prev, data.data])
       }
+      toast.success(editingMember ? 'Member updated.' : 'Member added.')
       closeMemberModal()
     } catch (err) {
-      setError(err.response?.data?.message || 'Save failed.')
+      toast.error(err.response?.data?.message || 'Save failed.')
     } finally {
       setMemberSaving(false)
     }
@@ -244,8 +249,9 @@ function CommitteesSection() {
     try {
       await api.delete(`/admin/members/${id}`)
       setMembers(prev => prev.filter(m => m._id !== id))
+      toast.success('Member deleted.')
     } catch {
-      setError('Delete failed.')
+      toast.error('Delete failed.')
     }
   }
 
@@ -434,7 +440,6 @@ function CommitteesSection() {
                 ))}
               </div>
 
-              {error && <p style={{ color: 'var(--danger-color)', marginTop: '12px' }}>{error}</p>}
               <button type="submit" className="auth-button" style={{ marginTop: '24px' }} disabled={saving}>
                 {saving ? 'Saving...' : editingCommittee ? 'Update Committee' : 'Create Committee'}
               </button>

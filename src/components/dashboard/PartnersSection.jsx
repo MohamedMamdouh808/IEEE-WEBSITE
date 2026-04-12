@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
 import { compressImage } from '../../utils/imageCompressor'
+import { toast } from '../../utils/toast'
 
 function PartnersSection() {
   const [partners, setPartners] = useState([])
@@ -67,9 +68,10 @@ function PartnersSection() {
         const { data } = await api.post('/admin/partners', form)
         setPartners(prev => [...prev, data.data])
       }
+      toast.success(editingId ? 'Partner updated.' : 'Partner saved.')
       closeModal()
     } catch (err) {
-      setError(err.response?.data?.message || 'Save failed.')
+      toast.error(err.response?.data?.message || 'Save failed.')
     } finally {
       setSaving(false)
     }
@@ -80,15 +82,15 @@ function PartnersSection() {
     try {
       await api.delete(`/admin/partners/${id}`)
       setPartners(prev => prev.filter(p => p._id !== id))
+      toast.success('Partner deleted.')
     } catch {
-      setError('Delete failed.')
+      toast.error('Delete failed.')
     }
   }
 
   return (
     <section className="content-section active">
       <h1>Partners</h1>
-      {error && <p style={{ color: 'var(--danger-color)', marginBottom: '12px' }}>{error}</p>}
       <div className="section-header">
         <h2>Our Partners</h2>
         <div className="section-actions">

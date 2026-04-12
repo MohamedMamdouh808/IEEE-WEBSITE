@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import Navbar from '../components/layout/Navbar'
+import { ToastContainer } from '../components/layout/Toast'
 import DashboardOverview from '../components/dashboard/DashboardOverview'
 import CommitteesSection from '../components/dashboard/CommitteesSection'
 import EventsSection from '../components/dashboard/EventsSection'
@@ -27,6 +28,7 @@ function Dashboard({ toggleTheme, theme }) {
           theme={theme} 
           setIsSidebarOpen={setIsSidebarOpen} 
         />
+        <ToastContainer />
         <div className="dashboard-content">
           <Routes>
             <Route path="/" element={<Navigate to="overview" replace />} />
@@ -42,6 +44,7 @@ function Dashboard({ toggleTheme, theme }) {
             <Route path="mailing-list" element={<MailingListSection />} />
             <Route path="gallery" element={<GallerySection />} />
             <Route path="users" element={<UsersSection />} />
+            <Route path="*" element={<Navigate to="overview" replace />} />
           </Routes>
         </div>
       </main>
