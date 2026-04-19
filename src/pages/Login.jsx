@@ -22,6 +22,8 @@ function Login() {
       // Only store non-sensitive user info for display purposes
       localStorage.setItem('isLoggedIn', 'true')
       localStorage.setItem('user', JSON.stringify(data.user))
+      // Drop any legacy standalone pfp cache — avatar now lives on the user object
+      localStorage.removeItem('profileImage')
       navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.')

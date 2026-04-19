@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
-import { compressImage } from '../../utils/imageCompressor'
+import { uploadToCloudinary } from '../../utils/cloudinary'
 import { toast } from '../../utils/toast'
 
 function MembersSection() {
@@ -11,6 +11,7 @@ function MembersSection() {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({ name: '', role: '', department: '', bio: '', email: '', linkedin: '', github: '', photo: '', order: 0, isActive: true })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
 
   const fetchMembers = async () => {
@@ -52,13 +53,15 @@ function MembersSection() {
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      try {
-        const compressed = await compressImage(file, 400, 400, 0.8)
-        setForm(prev => ({ ...prev, photo: compressed }))
-      } catch (err) {
-        console.error('Image compression failed', err)
-      }
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file)
+      setForm(prev => ({ ...prev, photo: url }))
+    } catch (err) {
+      toast.error('Photo upload failed. Try again.')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -201,8 +204,8 @@ function MembersSection() {
                   </button>
                 </div>
               </div>
-              <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={saving}>
-                {saving ? 'Saving...' : editingId ? 'Update Member' : 'Save Member'}
+              <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={saving || uploading}>
+                {uploading ? 'Uploading photo...' : saving ? 'Saving...' : editingId ? 'Update Member' : 'Save Member'}
               </button>
             </form>
           </div>

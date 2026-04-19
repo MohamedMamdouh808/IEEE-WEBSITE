@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
-import { compressImage } from '../../utils/imageCompressor'
+import { uploadToCloudinary } from '../../utils/cloudinary'
 
 function GallerySection() {
   const [photos, setPhotos] = useState([])
@@ -10,6 +10,7 @@ function GallerySection() {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({ src: '', alt: '', order: 0, isActive: true })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
 
   const fetchPhotos = async () => {
@@ -46,13 +47,15 @@ function GallerySection() {
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      try {
-        const compressed = await compressImage(file, 1200, 1200, 0.8) // Use a higher res for gallery since it goes on the homepage.
-        setForm(prev => ({ ...prev, src: compressed }))
-      } catch (err) {
-        console.error('Image compression failed', err)
-      }
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file)
+      setForm(prev => ({ ...prev, src: url }))
+    } catch (err) {
+      setError('Photo upload failed. Try again.')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -156,8 +159,8 @@ function GallerySection() {
                 <input type="checkbox" name="isActive" id="isActive" checked={form.isActive} onChange={handleInputChange} />
                 <label htmlFor="isActive" style={{ margin: 0 }}>Active (visible on website)</label>
               </div>
-              <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={saving}>
-                {saving ? 'Saving...' : editingId ? 'Update Photo' : 'Save Photo'}
+              <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={saving || uploading}>
+                {uploading ? 'Uploading photo...' : saving ? 'Saving...' : editingId ? 'Update Photo' : 'Save Photo'}
               </button>
             </form>
           </div>

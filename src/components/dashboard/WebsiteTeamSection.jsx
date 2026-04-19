@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
-import { compressImage } from '../../utils/imageCompressor'
+import { uploadToCloudinary } from '../../utils/cloudinary'
 import { toast } from '../../utils/toast'
 
 const TIER_LABELS = { 1: 'Tier I — Leadership', 2: 'Tier II — Design', 3: 'Tier III — Engineering' }
@@ -15,6 +15,7 @@ function WebsiteTeamSection() {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
 
   const fetchMembers = async () => {
@@ -56,13 +57,15 @@ function WebsiteTeamSection() {
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      try {
-        const compressed = await compressImage(file, 400, 400, 0.8)
-        setForm(prev => ({ ...prev, photo: compressed }))
-      } catch (err) {
-        console.error('Image compression failed', err)
-      }
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file)
+      setForm(prev => ({ ...prev, photo: url }))
+    } catch (err) {
+      toast.error('Photo upload failed. Try again.')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -203,8 +206,8 @@ function WebsiteTeamSection() {
                 <input type="checkbox" name="isActive" id="isActive" checked={form.isActive} onChange={handleInputChange} />
                 <label htmlFor="isActive" style={{ margin: 0 }}>Active (visible on website)</label>
               </div>
-              <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={saving}>
-                {saving ? 'Saving...' : editingId ? 'Update Member' : 'Add Member'}
+              <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={saving || uploading}>
+                {uploading ? 'Uploading photo...' : saving ? 'Saving...' : editingId ? 'Update Member' : 'Add Member'}
               </button>
             </form>
           </div>

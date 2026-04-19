@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
-import { compressImage } from '../../utils/imageCompressor'
+import { uploadToCloudinary } from '../../utils/cloudinary'
 import { toast } from '../../utils/toast'
 
 function PartnersSection() {
@@ -11,6 +11,7 @@ function PartnersSection() {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({ name: '', category: '', website: '', logo: '' })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
 
   const fetchPartners = async () => {
@@ -47,13 +48,15 @@ function PartnersSection() {
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      try {
-        const compressed = await compressImage(file, 400, 400, 0.8)
-        setForm(prev => ({ ...prev, logo: compressed }))
-      } catch (err) {
-        console.error('Image compression failed', err)
-      }
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file)
+      setForm(prev => ({ ...prev, logo: url }))
+    } catch (err) {
+      toast.error('Logo upload failed. Try again.')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -158,8 +161,8 @@ function PartnersSection() {
                   </button>
                 </div>
               </div>
-              <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={saving}>
-                {saving ? 'Saving...' : editingId ? 'Update Partner' : 'Save Partner'}
+              <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={saving || uploading}>
+                {uploading ? 'Uploading logo...' : saving ? 'Saving...' : editingId ? 'Update Partner' : 'Save Partner'}
               </button>
             </form>
           </div>

@@ -8,23 +8,25 @@ const notifications = [
   { id: 3, text: 'Technical Workshop starts in 1h', time: '1h ago', icon: 'fa-clock', color: 'orange' }
 ]
 
+const DEFAULT_AVATAR = "https://randomuser.me/api/portraits/men/1.jpg"
+
+const readUser = () => JSON.parse(localStorage.getItem('user') || '{}')
+
 function Navbar({ toggleTheme, theme, setIsSidebarOpen }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
-  const [profileImage, setProfileImage] = useState(() => {
-    return localStorage.getItem('profileImage') || "https://randomuser.me/api/portraits/men/1.jpg"
-  })
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const [user, setUser] = useState(readUser)
   const dropdownRef = useRef(null)
   const notificationRef = useRef(null)
   const navigate = useNavigate()
 
+  const profileImage = user.avatar || DEFAULT_AVATAR
+
   useEffect(() => {
-    const handleUpdate = (e) => {
-      setProfileImage(e.detail)
-    }
-    window.addEventListener('profileImageUpdate', handleUpdate)
-    
+    const handleStorage = () => setUser(readUser())
+    // Fires on cross-tab changes AND same-tab dispatches
+    window.addEventListener('storage', handleStorage)
+
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsDropdownOpen(false)
@@ -35,7 +37,7 @@ function Navbar({ toggleTheme, theme, setIsSidebarOpen }) {
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      window.removeEventListener('profileImageUpdate', handleUpdate)
+      window.removeEventListener('storage', handleStorage)
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
@@ -46,6 +48,8 @@ function Navbar({ toggleTheme, theme, setIsSidebarOpen }) {
     } finally {
       localStorage.removeItem('isLoggedIn')
       localStorage.removeItem('user')
+      // Clean up any legacy standalone pfp cache from old builds
+      localStorage.removeItem('profileImage')
       navigate('/login')
     }
   }

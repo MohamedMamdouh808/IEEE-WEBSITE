@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
-import { compressImage } from '../../utils/imageCompressor'
+import { uploadToCloudinary } from '../../utils/cloudinary'
 import { toast } from '../../utils/toast'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -31,6 +31,7 @@ function CommitteesSection() {
   const [editingCommittee, setEditingCommittee] = useState(null) // null = new
   const [cForm, setCForm] = useState(EMPTY_COMMITTEE)
   const [saving, setSaving] = useState(false)
+  const [uploadingCommittee, setUploadingCommittee] = useState(false)
   const imageInputRef = useRef(null)
 
   // Members modal
@@ -44,6 +45,7 @@ function CommitteesSection() {
   const [editingMember, setEditingMember] = useState(null)
   const [mForm, setMForm] = useState(EMPTY_MEMBER)
   const [memberSaving, setMemberSaving] = useState(false)
+  const [uploadingMember, setUploadingMember] = useState(false)
   const photoInputRef = useRef(null)
 
   // ── Committees CRUD ───────────────────────────────────────────────────────
@@ -101,10 +103,15 @@ function CommitteesSection() {
   const handleCImageUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
+    setUploadingCommittee(true)
     try {
-      const compressed = await compressImage(file, 800, 800, 0.8)
-      setCForm(prev => ({ ...prev, image: compressed }))
-    } catch(err) { console.error(err) }
+      const url = await uploadToCloudinary(file)
+      setCForm(prev => ({ ...prev, image: url }))
+    } catch (err) {
+      toast.error('Image upload failed. Try again.')
+    } finally {
+      setUploadingCommittee(false)
+    }
   }
 
   // Goals
@@ -213,10 +220,15 @@ function CommitteesSection() {
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
+    setUploadingMember(true)
     try {
-      const compressed = await compressImage(file, 400, 400, 0.8)
-      setMForm(prev => ({ ...prev, photo: compressed }))
-    } catch(err) { console.error(err) }
+      const url = await uploadToCloudinary(file)
+      setMForm(prev => ({ ...prev, photo: url }))
+    } catch (err) {
+      toast.error('Photo upload failed. Try again.')
+    } finally {
+      setUploadingMember(false)
+    }
   }
 
   const handleMemberSubmit = async (e) => {
@@ -440,8 +452,8 @@ function CommitteesSection() {
                 ))}
               </div>
 
-              <button type="submit" className="auth-button" style={{ marginTop: '24px' }} disabled={saving}>
-                {saving ? 'Saving...' : editingCommittee ? 'Update Committee' : 'Create Committee'}
+              <button type="submit" className="auth-button" style={{ marginTop: '24px' }} disabled={saving || uploadingCommittee}>
+                {uploadingCommittee ? 'Uploading image...' : saving ? 'Saving...' : editingCommittee ? 'Update Committee' : 'Create Committee'}
               </button>
             </form>
           </div>
@@ -580,8 +592,8 @@ function CommitteesSection() {
                       <label htmlFor="m-isActive" style={{ margin: 0 }}>Active</label>
                     </div>
 
-                    <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={memberSaving}>
-                      {memberSaving ? 'Saving...' : editingMember ? 'Update Member' : 'Add Member'}
+                    <button type="submit" className="auth-button" style={{ marginTop: '20px' }} disabled={memberSaving || uploadingMember}>
+                      {uploadingMember ? 'Uploading photo...' : memberSaving ? 'Saving...' : editingMember ? 'Update Member' : 'Add Member'}
                     </button>
                   </form>
                 </div>
