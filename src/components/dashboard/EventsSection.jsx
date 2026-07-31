@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
 import { uploadToCloudinary } from '../../utils/cloudinary'
+import { normalizeUrl, isValidUrl } from '../../utils/url'
 import { toast } from '../../utils/toast'
 
 function EventsSection() {
@@ -56,6 +57,14 @@ function EventsSection() {
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
+  // Add the missing https:// as soon as the admin leaves the field, so what
+  // they see in the form is exactly what the public site will link to.
+  const handleLinkBlur = (e) => {
+    const { name, value } = e.target
+    const normalized = normalizeUrl(value)
+    if (normalized !== value) setForm(prev => ({ ...prev, [name]: normalized }))
+  }
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -72,9 +81,16 @@ function EventsSection() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!isValidUrl(form.registrationLink)) return toast.error('Registration link doesn\'t look like a valid URL.')
+    if (!isValidUrl(form.agendaLink)) return toast.error('Agenda link doesn\'t look like a valid URL.')
     setSaving(true)
     try {
-      const payload = { ...form, attendanceCount: form.attendanceCount ? Number(form.attendanceCount) : undefined }
+      const payload = {
+        ...form,
+        attendanceCount: form.attendanceCount ? Number(form.attendanceCount) : undefined,
+        registrationLink: normalizeUrl(form.registrationLink),
+        agendaLink: normalizeUrl(form.agendaLink),
+      }
       if (editingId) {
         const { data } = await api.put(`/admin/events/${editingId}`, payload)
         setEvents(prev => prev.map(ev => ev._id === editingId ? data.data : ev))
@@ -139,6 +155,21 @@ function EventsSection() {
                 <div className="event-date"><i className="fas fa-calendar-alt"></i> {event.date ? new Date(event.date).toLocaleDateString() : '—'}</div>
                 <div className="event-location" style={{ marginTop: '5px' }}><i className="fas fa-map-marker-alt"></i> {event.location}</div>
                 <div className="event-description" style={{ fontSize: '0.85rem', margin: '15px 0' }}>{event.description}</div>
+                <div className="event-links">
+                  {normalizeUrl(event.registrationLink) && (
+                    <a className="link-chip" href={normalizeUrl(event.registrationLink)} target="_blank" rel="noopener noreferrer" title={event.registrationLink}>
+                      <i className="fas fa-link"></i> Registration
+                    </a>
+                  )}
+                  {normalizeUrl(event.agendaLink) && (
+                    <a className="link-chip" href={normalizeUrl(event.agendaLink)} target="_blank" rel="noopener noreferrer" title={event.agendaLink}>
+                      <i className="fas fa-list-alt"></i> Agenda
+                    </a>
+                  )}
+                  {!normalizeUrl(event.registrationLink) && !normalizeUrl(event.agendaLink) && (
+                    <span className="link-chip link-chip--empty"><i className="fas fa-unlink"></i> No link added</span>
+                  )}
+                </div>
               </div>
               <div className="event-card-footer">
                 <div className="event-attendance"><i className="fas fa-users"></i> {event.attendanceCount ?? '—'} Expected</div>
@@ -193,11 +224,13 @@ function EventsSection() {
               </div>
               <div className="form-group">
                 <label><i className="fas fa-link"></i> Registration Link (optional)</label>
-                <input type="url" name="registrationLink" value={form.registrationLink} onChange={handleInputChange} placeholder="https://forms.gle/..." />
+                <input type="text" inputMode="url" name="registrationLink" value={form.registrationLink} onChange={handleInputChange} onBlur={handleLinkBlur} placeholder="forms.gle/... or https://..." />
+                <small className="form-hint">Shows as the <strong>Register Now</strong> button on the public Events page. <code>https://</code> is added for you.</small>
               </div>
               <div className="form-group">
                 <label><i className="fas fa-list-alt"></i> Agenda Link (optional)</label>
-                <input type="url" name="agendaLink" value={form.agendaLink} onChange={handleInputChange} placeholder="https://..." />
+                <input type="text" inputMode="url" name="agendaLink" value={form.agendaLink} onChange={handleInputChange} onBlur={handleLinkBlur} placeholder="drive.google.com/... or https://..." />
+                <small className="form-hint">Shows as the <strong>View Agenda</strong> button next to it.</small>
               </div>
               <div className="form-group">
                 <label><i className="fas fa-image"></i> Event Poster (URL or upload)</label>

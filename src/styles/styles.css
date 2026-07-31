@@ -2129,6 +2129,55 @@ select:focus {
     50% { transform: scale(1.1); }
 }
 
+/* ── Link chips: show which links are saved on an event / partner card ── */
+.event-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.link-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--primary-color);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+a.link-chip:hover {
+    background: var(--sidebar-active);
+    border-color: var(--primary-color);
+}
+
+.link-chip--empty {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Helper text under a form field */
+.form-hint {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+.form-hint code {
+    background: var(--input-bg);
+    border-radius: var(--radius-sm);
+    padding: 1px 5px;
+    font-size: 0.95em;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     *,

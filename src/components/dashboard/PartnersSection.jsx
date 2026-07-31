@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import api from '../../api/index'
 import { uploadToCloudinary } from '../../utils/cloudinary'
+import { normalizeUrl, isValidUrl } from '../../utils/url'
 import { toast } from '../../utils/toast'
 
 function PartnersSection() {
@@ -46,6 +47,14 @@ function PartnersSection() {
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
+  // Add the missing https:// as soon as the admin leaves the field, so what
+  // they see in the form is exactly what the logo on the site will link to.
+  const handleLinkBlur = (e) => {
+    const { name, value } = e.target
+    const normalized = normalizeUrl(value)
+    if (normalized !== value) setForm(prev => ({ ...prev, [name]: normalized }))
+  }
+
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -62,13 +71,15 @@ function PartnersSection() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!isValidUrl(form.website)) return toast.error('Website URL doesn\'t look like a valid link.')
     setSaving(true)
     try {
+      const payload = { ...form, website: normalizeUrl(form.website) }
       if (editingId) {
-        const { data } = await api.put(`/admin/partners/${editingId}`, form)
+        const { data } = await api.put(`/admin/partners/${editingId}`, payload)
         setPartners(prev => prev.map(p => p._id === editingId ? data.data : p))
       } else {
-        const { data } = await api.post('/admin/partners', form)
+        const { data } = await api.post('/admin/partners', payload)
         setPartners(prev => [...prev, data.data])
       }
       toast.success(editingId ? 'Partner updated.' : 'Partner saved.')
@@ -116,7 +127,9 @@ function PartnersSection() {
                 <p className="partner-type">{partner.category}</p>
                 <h3>{partner.name}</h3>
                 <div className="partner-contact">
-                  {partner.website && <a href={partner.website} target="_blank" rel="noopener noreferrer"><i className="fas fa-external-link-alt"></i> Website</a>}
+                  {normalizeUrl(partner.website)
+                    ? <a className="link-chip" href={normalizeUrl(partner.website)} target="_blank" rel="noopener noreferrer" title={partner.website}><i className="fas fa-external-link-alt"></i> Website</a>
+                    : <span className="link-chip link-chip--empty"><i className="fas fa-unlink"></i> No link — logo not clickable</span>}
                 </div>
                 <div className="partner-actions">
                   <button type="button" className="action-btn mini" onClick={() => openModal(partner)}><i className="fas fa-edit"></i></button>
@@ -147,8 +160,9 @@ function PartnersSection() {
                 <input type="text" name="category" value={form.category} onChange={handleInputChange} placeholder="e.g. Technology Partner" required />
               </div>
               <div className="form-group">
-                <label><i className="fas fa-link"></i> Website URL</label>
-                <input type="url" name="website" value={form.website} onChange={handleInputChange} placeholder="https://example.com" />
+                <label><i className="fas fa-link"></i> Website URL (optional)</label>
+                <input type="text" inputMode="url" name="website" value={form.website} onChange={handleInputChange} onBlur={handleLinkBlur} placeholder="example.com or https://example.com" />
+                <small className="form-hint">Add one and the logo becomes clickable on the home page — it opens this site in a new tab. Leave it empty for a plain logo.</small>
               </div>
               <div className="form-group">
                 <label><i className="fas fa-image"></i> Logo (URL or upload)</label>
