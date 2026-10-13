@@ -25,8 +25,8 @@ const Footer = () => {
           </div>
         </div>
         <div className="footer-col footer-contact">
-          <div className="footer-contact-item"><i className="fa-solid fa-envelope"></i> ieeemust2026@gmail.com</div>
-          <div className="footer-contact-item"><i className="fa-solid fa-phone"></i> +20 12 050 80 333</div>
+          <div className="footer-contact-item"><i className="fa-solid fa-envelope"></i> ieeemust2027@gmail.com</div>
+          <div className="footer-contact-item"><i className="fa-solid fa-phone"></i> +20 10 640 77 699</div>
           <div className="footer-social">
             <a href="https://www.facebook.com/IEEEMUST.egy" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i className="fab fa-facebook-f"></i></a>
             <a href="https://www.instagram.com/ieeemust/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i className="fab fa-instagram"></i></a>
@@ -37,7 +37,7 @@ const Footer = () => {
       </div>
       <hr className="footer-divider" />
       <div className="footer-bottom">
-        <span>© 2026 IEEE MUST SB. All rights reserved.</span>
+        <span>© 2027 IEEE MUST SB. All rights reserved.</span>
       </div>
     </footer>
   );
